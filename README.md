@@ -1,21 +1,18 @@
 # Unity Hand Tracking Simulation
-Simple project to demonstrate how Unity can interacts with HandTracking Camera.
+This project demonstrates how Unity can interact with a Hand Tracking Camera using a Python-based application.
 
-## Hand Tracking Camera Python App
-- Go to to HandTracking folder
+## Setup
+1. Navigate to the HandTracking folder:
 ```bash
 cd /path/to/project-folder/HandTracking
-pip install -r requirements.txt
 ```
-- Make sure to install dependencies
+2. Install the required dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-- Run the Hand Tracking Camera Python App
+3. Run the Hand Tracking Camera python app:
 ```bash
 python main.py
 ```
-- Setup the web camera and start
-
-## Unity
-- Open the Unity project and play `UnityHandTracking` scene
+4. Set up the web camera and press start button.
+5. Now open the Unity project in your Unity Editor and play the `UnityHandTracking` scene to begin the simulation.

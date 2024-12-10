@@ -2,13 +2,16 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 
-public class LidarDataUDPReceiver : MonoBehaviour
+public class UDPDataReceiver : MonoBehaviour
 {
+    public HandData HandData => _handData;
+    
     public int Port = 2368;
-    public Vector3[] CloudPoints;
     
     private UdpClient _udpClient;
+    private HandData _handData;
 
     private void Start()
     {
@@ -36,7 +39,7 @@ public class LidarDataUDPReceiver : MonoBehaviour
             {
                 IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, Port);
                 byte[] receivedBytes = _udpClient.Receive(ref endPoint);
-                CloudPoints = Deserialize(receivedBytes);
+                _handData = Deserialize(receivedBytes);
             }
             catch (Exception ex)
             {
@@ -45,25 +48,28 @@ public class LidarDataUDPReceiver : MonoBehaviour
         }
     }
     
-    private Vector3[] Deserialize(byte[] bytes)
+    private HandData Deserialize(byte[] bytes)
     {
-        // Calculate the number of Vector3 objects in the byte array (each Vector3 is 12 bytes)
-        int numVectors = bytes.Length / 12;
-        Vector3[] vectorArray = new Vector3[numVectors];
+        var dataString = Encoding.ASCII.GetString(bytes);
+        var dataStringSplit = dataString.Split(',');
 
-        // Loop through the byte array and reconstruct each Vector3
-        for (int i = 0; i < numVectors; i++)
+        if (string.IsNullOrEmpty(dataString)) return default;
+
+        var handPos = new Vector2(Convert.ToInt32(dataStringSplit[0]), Convert.ToInt32(dataStringSplit[1]));
+        Debug.Log("Received Pos: " + handPos);
+
+        return new HandData
         {
-            // Extract 12 bytes for each Vector3
-            float x = BitConverter.ToSingle(bytes, i * 12);
-            float y = BitConverter.ToSingle(bytes, i * 12 + 4);
-            float z = BitConverter.ToSingle(bytes, i * 12 + 8);
-
-            // Assign the Vector3 to the array
-            vectorArray[i] = new Vector3(x, y, z);
-        }
-
-        return vectorArray;
+            Position = handPos,
+            IsValid = true
+        };
     }
+}
+
+[Serializable]
+public struct HandData
+{
+    public Vector2 Position;
+    public bool IsValid;
 }
 

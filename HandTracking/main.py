@@ -5,7 +5,7 @@ import cv2, pygame.image, pygame.camera
 #tracking
 from cvzone.HandTrackingModule import HandDetector
 from cvzone.FPS import FPS 
-import GeneralAttribute, UDPDataSender
+import Global, UDPDataSender
 import cv2, numpy as np, threading
     
 def SetupNotification(content):
@@ -43,37 +43,40 @@ def HandVisualizing():
     global cap, scaleSet, brightnessSet, contrastSet, webcamStatus
     
     SetupNotification("Your Camera Opened. Now Launch The Game.")
-    GeneralAttribute.isRun = True
+    Global.isRun = True
     thread_sender = threading.Thread(target=UDPDataSender.SendingPacket)
     thread_sender.start()
 
-    winName = 'HandTracking'
+    winName = 'HandTracking Camera'
 
     fpsReader = FPS()
     cap.set(3, 1280)
     cap.set(4, 720)
 
-    detector = HandDetector(detectionCon=0.8, maxHands=4)
-    hands_array = np.empty(10, dtype=object)
+    detector = HandDetector(detectionCon=0.8, maxHands=1)
 
-    cv2.namedWindow(winName)
+    cv2.namedWindow(winName, cv2.WINDOW_NORMAL)
+
+    ScaleSetting(-50)
+    BrightnessSetting(0)
+    ContrastSetting(100)
+
     cv2.createTrackbar('Scale', winName, 0, 100, ScaleSetting)
     cv2.setTrackbarMin('Scale', winName, -50)
-    cv2.setTrackbarMax('Scale', winName, 0)
-    cv2.setTrackbarPos('Scale', winName, -25)
+    cv2.setTrackbarMax('Scale', winName, -1)
+    cv2.setTrackbarPos('Scale', winName, -50)
 
-    cv2.createTrackbar('Brightness', winName, 25, 75, BrightnessSetting)
-    cv2.setTrackbarMin('Brightness', winName, 25)
-    cv2.setTrackbarMax('Brightness', winName, 75)
-    cv2.setTrackbarPos('Brightness', winName, 50)
+    cv2.createTrackbar('Brightness', winName, 0, 200, BrightnessSetting)
+    cv2.setTrackbarMin('Brightness', winName, 0)
+    cv2.setTrackbarMax('Brightness', winName, 100)
+    cv2.setTrackbarPos('Brightness', winName, 0)
 
-    cv2.createTrackbar('Contrast', winName, 100, 150, ContrastSetting)
+    cv2.createTrackbar('Contrast', winName, 100, 200, ContrastSetting)
     cv2.setTrackbarMin('Contrast', winName, 100)
-    cv2.setTrackbarMax('Contrast', winName, 150)
-    cv2.setTrackbarPos('Contrast', winName, 125)
+    cv2.setTrackbarMax('Contrast', winName, 200)
+    cv2.setTrackbarPos('Contrast', winName, 100)
     
     while True:
-        totalHand = 0
         success, img = cap.read()
 
         #get the webcam size
@@ -107,55 +110,16 @@ def HandVisualizing():
         # hands = detector.findHands(img, draw=False)  # No Draw
 
         if hands:
-            for index, hand_landmark in enumerate(hands):
-                hands_array[index] = hands[index]
-                disallowed_characters = "( )"
-                totalHand = index
-
-                if index == 0:
-                    position_index_1 = str(hands_array[0]["center"])
-
-                    GeneralAttribute.positionHand = f"{index + 1},{position_index_1}"
-                    for char in disallowed_characters:
-                        GeneralAttribute.positionHand = GeneralAttribute.positionHand.replace(char, "")
-
-                elif index == 1:
-                    position_index_1 = str(hands_array[0]["center"])
-                    position_index_2 = str(hands_array[1]["center"]) 
-
-                    GeneralAttribute.positionHand = f"{index + 1},{position_index_1},{position_index_2}"
-                    for char in disallowed_characters:
-                        GeneralAttribute.positionHand = GeneralAttribute.positionHand.replace(char, "")
-
-                elif index == 2:
-                    position_index_1 = str(hands_array[0]["center"])
-                    position_index_2 = str(hands_array[1]["center"])  
-                    position_index_3 = str(hands_array[2]["center"]) 
-
-                    GeneralAttribute.positionHand = f"{index + 1},{position_index_1},{position_index_2},{position_index_3}"
-                    for char in disallowed_characters:
-                        GeneralAttribute.positionHand = GeneralAttribute.positionHand.replace(char, "")
-
-                elif index == 3:
-                    position_index_1 = str(hands_array[0]["center"]) 
-                    position_index_2 = str(hands_array[1]["center"])  
-                    position_index_3 = str(hands_array[2]["center"]) 
-                    position_index_4 = str(hands_array[3]["center"])  
-
-                    GeneralAttribute.positionHand = f"{index + 1},{position_index_1},{position_index_2},{position_index_3},{position_index_4}"
-                    for char in disallowed_characters:
-                        GeneralAttribute.positionHand = GeneralAttribute.positionHand.replace(char, "")
-
-                #sock.sendto(str.encode(str(GeneralAttribute.positionHand)), serverAddressPort)
-                
+            disallowed_characters = "( )"
+            Global.handPosition = f"{hands[0]["center"]}"
+            for char in disallowed_characters:
+                Global.handPosition = Global.handPosition.replace(char, "")
         else:
-            GeneralAttribute.positionHand = ""
+            Global.handPosition = ""
         
         cv2.putText(result, f'Esc To Stop Camera', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 128), 2)
-        cv2.putText(result, f'Slide To Right For Scalling Camera Zoom', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         fps, img = fpsReader.update(result,pos=(50, 610),bgColor=(128,0,0),scale=1.5,thickness=2)
-        cv2.putText(result, f'Sending: {GeneralAttribute.positionHand}', (50, 640), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 128), 2)
-        cv2.putText(result, f'Total Hand Detected: {totalHand + 1}', (50, 670), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 128), 2)
+        cv2.putText(result, f'Sending: {Global.handPosition}', (50, 640), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 128), 2)
         
         result = cv2.resize(result, (0, 0), None, 0.7, 0.7)
         cv2.imshow(winName, result)
@@ -163,7 +127,7 @@ def HandVisualizing():
         if cv2.waitKey(1) == 27:
             cap.release()
             cv2.destroyAllWindows()
-            GeneralAttribute.isRun = False
+            Global.isRun = False
             webcamStatus = False
             
             SetupNotification("Start Webcam and Launch The Game")

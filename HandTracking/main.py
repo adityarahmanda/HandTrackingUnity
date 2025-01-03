@@ -111,7 +111,7 @@ def HandVisualizing():
 
         if hands:
             disallowed_characters = "( )"
-            Global.handPosition = f"{hands[0]["center"]}"
+            Global.handPosition = f"{hands[0]['center']}"
             for char in disallowed_characters:
                 Global.handPosition = Global.handPosition.replace(char, "")
         else:
